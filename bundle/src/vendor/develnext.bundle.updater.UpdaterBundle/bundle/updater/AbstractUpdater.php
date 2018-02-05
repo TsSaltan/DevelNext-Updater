@@ -173,8 +173,7 @@ abstract class AbstractUpdater {
             
             // Запускаем ранее завершённую программу
             if(fs::exists($this->origFile)){
-            	$command = (fs::ext($this->origFile) == 'jar') ? [self::getJavaPath(), '-jar', $this->origFile] : [$this->origFile] ;
-            	(new Process($command))->start();
+            	self::launchApp($this->origFile);
         	}
         }))->start();
     }
@@ -208,5 +207,24 @@ abstract class AbstractUpdater {
      */
     public static function getJavaPath() : string {
          return System::getProperty('java.home') . '/bin/java';
+    }
+
+    /**
+     * Запуск приложения. Если передан путь к jar, то он будет запущен с помощью java
+     */
+    public static function launchApp(string $path, array $args = []) : Process {
+         $command = (fs::ext($path) == 'jar')? 
+         				[self::getJavaPath(), '-jar', $path]: 
+         				[$path];
+         $command = array_merge($command, $args);
+
+         // Если аргумент содержит пробел, он должен быть заключён в кавычки
+         foreach ($command as $key => $value) {
+         	if(str::contains($value, ' ')){
+         		$command[$key] = '"' . $value . '"';
+         	}
+         }
+
+         return (new Process($command))->start();
     }
 }

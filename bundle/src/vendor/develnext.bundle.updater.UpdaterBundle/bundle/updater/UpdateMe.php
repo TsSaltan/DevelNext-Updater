@@ -1,7 +1,7 @@
 <?php
 namespace bundle\updater;
 
-use bundle\updater\AbstractUpdater;
+use bundle\updater\GitHubUpdater;
 use Exception;
 use php\framework\Logger;
 use php\lang\Process;
@@ -22,7 +22,7 @@ class UpdateMe
      */
     public static function start(string $version, string $updaterFile = null, callable $callback = null){
         // Если путь не указан - по умолчанию файл расположен рядом с программой
-        $updaterFile = is_null($updaterFile) ? AbstractUpdater::getCurrentDir() . 'Updater.jar' : $updaterFile;
+        $updaterFile = is_null($updaterFile) ? GitHubUpdater::getCurrentDir() . 'Updater.jar' : $updaterFile;
 
         if(!fs::exists($updaterFile)){
             throw new Exception('Updater file does not found: ' . $updaterFile);
@@ -30,13 +30,10 @@ class UpdateMe
         }
         
         (new Thread(function() use ($version, $updaterFile, $callback){
-            // Т.к. java может быть не установлена, отправим команду той машине, которая работает с текущей программой
-            $java = AbstractUpdater::getJavaPath();
-            
-            // Передаём в Updater версию программы и путь к исполняемому файлу и читаем ответ
-            $process = new Process(['"'.$java.'"', '-jar', '"'.$updaterFile.'"', $version, '"'.$GLOBALS['argv'][0].'"'])->start();
+            // Передаём в Updater версию программы и путь к исполняемому файлу и читаем ответ            
+            $process = GitHubUpdater::launchApp($updaterFile, [$version, $GLOBALS['argv'][0]]);
             $return = $process->getInput()->readFully();
-            if(str::contains($return, AbstractUpdater::CLOSE_MESSAGE)){
+            if(str::contains($return, GitHubUpdater::CLOSE_MESSAGE)){
                 // Если была получена команда на завершение работы - закрываем приложение
                 // Если не завершить работу, updater не сможет заменить файлы
                 Logger::info('Shutdown before updating...');
