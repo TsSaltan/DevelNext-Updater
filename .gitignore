@@ -13,8 +13,6 @@
 */build
 */build/*
 */build.xml
-*/build.gradle
-*/settings.gradle
 
 *.log
 *.pid
