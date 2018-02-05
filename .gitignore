@@ -5,7 +5,7 @@
 */.dn/tmp
 */.dn/index.json
 */.dn/backup
-
+*/.gradle/*
 */vendor
 */src_generated
 */src/JPHP-INF
