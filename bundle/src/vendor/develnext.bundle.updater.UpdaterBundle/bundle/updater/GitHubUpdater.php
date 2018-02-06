@@ -53,15 +53,20 @@ class GitHubUpdater extends AbstractUpdater {
     
     /**
      * Проверка на наличие обновлений
-     * @return bool - true если необходимо обновление 
+     * @param callable $callback Первый аргумент true если необходимо обновление 
      * @async
      */
     public function checkUpdates(callable $callback){
         (new Thread(function() use ($callback){
             $last = $this->getLastRelease();
             uiLater(function() use ($last, $callback){
-                $this->lastRelease = $last;                
-                call_user_func($callback, isset($last['version']), $last);
+                $this->lastRelease = $last;   
+                if(isset($last['version'])){
+                    $return = $this->compareVersion($last['version']);
+                }
+                else $return = false;     
+                       
+                call_user_func($callback, $return, $last);
             });
         }))->start();
     }

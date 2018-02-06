@@ -3,6 +3,7 @@ namespace bundle\updater;
 
 use bundle\updater\Updater;
 use php\compress\ZipFile;
+use php\framework\Logger;
 use php\io\File;
 use php\io\FileStream;
 use php\io\MiscStream;
@@ -96,6 +97,9 @@ abstract class AbstractUpdater {
 
         $current = intval(implode('', $c));
         $require = intval(implode('', $r));
+
+        //var_dump('!!!Current version: ' . $this->currentVersion . ' (weight='.$current.')');
+        //var_dump('!!!New version: ' . $version . ' (weight='.$require.')');
 
         return $require > $current;
     }
