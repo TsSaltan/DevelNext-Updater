@@ -48,7 +48,7 @@ class GitHubUpdater extends AbstractUpdater {
             ];
         }
         
-        return false;
+        return [];
     }
     
     /**
