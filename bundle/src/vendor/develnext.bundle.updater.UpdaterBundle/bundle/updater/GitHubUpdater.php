@@ -38,7 +38,7 @@ class GitHubUpdater extends AbstractUpdater {
     protected function getLastRelease() {
         $url = 'https://api.github.com/repos/'.$this->user.'/'.$this->repo.'/releases/latest';
         $data = json_decode(file_get_contents($url), true);
-        if(is_array($data) and isset($data['assets'][0])){
+        if(is_array($data) && isset($data['assets'][0])){
             $this->lastRelease = [
                 'version' => $data['tag_name'],
                 'description' => $data['body'],
@@ -58,7 +58,7 @@ class GitHubUpdater extends AbstractUpdater {
         (new Thread(function() use ($callback){
             $this->getLastRelease();
             uiLater(function() use ($callback){
-                $update = isset($this->lastRelease['version']) and $this->compareVersion($this->lastRelease['version']);
+                $update = isset($this->lastRelease['version']) && $this->compareVersion($this->lastRelease['version']);
                 call_user_func($callback, $update, $this->lastRelease);
             });
         }))->start();
