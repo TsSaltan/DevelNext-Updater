@@ -25,7 +25,7 @@ class GitHubUpdater extends AbstractUpdater {
      * Хранение данных о последнем релизе
      * @var array
      */
-    protected $lastRelease;
+    protected $lastRelease = [];
     
     public function __construct($user, $repo){
         $this->user = $user;    
@@ -35,11 +35,11 @@ class GitHubUpdater extends AbstractUpdater {
     /**
      * Получить последний релиз 
      */
-    protected function getLastRelease() : array {
+    protected function getLastRelease() {
         $url = 'https://api.github.com/repos/'.$this->user.'/'.$this->repo.'/releases/latest';
         $data = json_decode(file_get_contents($url), true);
-        if(is_array($data)){
-            return [
+        if(is_array($data) and isset($data['assets'][0])){
+            $this->lastRelease = [
                 'version' => $data['tag_name'],
                 'description' => $data['body'],
                 'url' => $data['assets'][0]['browser_download_url'],
@@ -47,8 +47,6 @@ class GitHubUpdater extends AbstractUpdater {
                 'name' => $data['assets'][0]['name'],
             ];
         }
-        
-        return [];
     }
     
     /**
@@ -58,15 +56,10 @@ class GitHubUpdater extends AbstractUpdater {
      */
     public function checkUpdates(callable $callback){
         (new Thread(function() use ($callback){
-            $last = $this->getLastRelease();
-            uiLater(function() use ($last, $callback){
-                $this->lastRelease = $last;   
-                if(isset($last['version'])){
-                    $return = $this->compareVersion($last['version']);
-                }
-                else $return = false;     
-                       
-                call_user_func($callback, $return, $last);
+            $this->getLastRelease();
+            uiLater(function() use ($callback){
+                $update = isset($this->lastRelease['version']) and $this->compareVersion($this->lastRelease['version']);
+                call_user_func($callback, $update, $this->lastRelease);
             });
         }))->start();
     }
@@ -76,6 +69,8 @@ class GitHubUpdater extends AbstractUpdater {
      * @param callable $progress см. AbstractUpdater->applyUpdate
      */
     public function installUpdate(callable $progress){
-        parent::applyUpdate($this->lastRelease['url'], $this->lastRelease['name'], $this->lastRelease['size'], $progress);
+        if(isset($this->lastRelease['version']) && isset($this->lastRelease['url'])){
+            parent::applyUpdate($this->lastRelease['url'], $this->lastRelease['name'], $this->lastRelease['size'], $progress);
+        }
     }
 }
